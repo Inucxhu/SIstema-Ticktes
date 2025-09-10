@@ -246,12 +246,7 @@ const LoginForm = () => {
         </form>
 
         <div className="mt-6 text-center text-sm text-gray-500">
-          <p>¿No tienes acceso? Contacta a tu administrador</p>
-          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
-            <p className="font-medium">Admin Maestro:</p>
-            <p>Usuario: <code className="bg-white px-1 rounded">ecruz</code></p>
-            <p>Contraseña: <code className="bg-white px-1 rounded">admin123</code></p>
-          </div>
+          <p>¿No tienes acceso? Contacta a tu administrador para obtener credenciales.</p>
         </div>
       </div>
     </div>
