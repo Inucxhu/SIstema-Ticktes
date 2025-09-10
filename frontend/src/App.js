@@ -1127,8 +1127,9 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
     }
   };
 
-  const canAssign = currentUser.role === 'Soporte' && ticket.estado === 'Nuevo';
-  const canUpdate = currentUser.role === 'Soporte' && ticket.asignado_a === currentUser.id;
+  const canAssign = (currentUser.role === 'Soporte' || currentUser.role === 'Administrador Maestro') && ticket.estado === 'Nuevo';
+  const canUpdate = (currentUser.role === 'Soporte' || currentUser.role === 'Administrador Maestro') && 
+                   (ticket.asignado_a === currentUser.id || currentUser.role === 'Administrador Maestro');
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-100">
