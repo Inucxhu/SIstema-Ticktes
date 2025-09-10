@@ -497,12 +497,13 @@ const TicketCard = ({ ticket, onTicketUpdated }) => {
   );
 };
 
-// Componente de métricas/dashboard (actualizado)
-const Dashboard = ({ metricas }) => {
+// Componente de métricas/dashboard (actualizado)  
+const Dashboard = ({ metricas, initialLoad }) => {
   const { addNotification } = useNotifications();
 
   useEffect(() => {
-    if (metricas) {
+    // Solo mostrar notificaciones en la carga inicial, no en cada actualización
+    if (metricas && initialLoad) {
       // Notificación por tickets de alta prioridad acumulados
       const ticketsAltaPrioridad = metricas.tickets_por_prioridad.Alta || 0;
       if (ticketsAltaPrioridad >= 3) {
@@ -510,8 +511,7 @@ const Dashboard = ({ metricas }) => {
           type: 'warning',
           title: '⚠️ Múltiples Tickets Críticos',
           message: `Hay ${ticketsAltaPrioridad} tickets de alta prioridad pendientes`,
-          duration: 10000,
-          persistent: true
+          duration: 10000
         });
       }
 
@@ -526,7 +526,7 @@ const Dashboard = ({ metricas }) => {
         });
       }
     }
-  }, [metricas, addNotification]);
+  }, [metricas, addNotification, initialLoad]);
 
   if (!metricas) return null;
 
