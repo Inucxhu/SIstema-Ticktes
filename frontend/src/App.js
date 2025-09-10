@@ -1170,8 +1170,8 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
         </div>
       </div>
 
-      {/* Acciones para usuarios de Soporte */}
-      {currentUser.role === 'Soporte' && (
+      {/* Acciones para usuarios de Soporte y Master Admin */}
+      {(currentUser.role === 'Soporte' || currentUser.role === 'Administrador Maestro') && (
         <div className="flex gap-2 mb-4">
           {canAssign && (
             <button
@@ -1203,6 +1203,15 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
               className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
             >
               📁 Cerrar Ticket
+            </button>
+          )}
+          {/* Master Admin puede resolver cualquier ticket directamente */}
+          {currentUser.role === 'Administrador Maestro' && ticket.estado !== 'Resuelto' && ticket.estado !== 'Cerrado' && (
+            <button
+              onClick={() => cambiarEstado('Resuelto')}
+              className="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors"
+            >
+              👑 Resolver Directo
             </button>
           )}
         </div>
