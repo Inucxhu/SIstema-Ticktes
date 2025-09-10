@@ -153,6 +153,9 @@ class TicketUpdate(BaseModel):
     departamento: Optional[DepartamentoTicket] = None
     asignado_a: Optional[str] = None
 
+class TicketResolve(BaseModel):
+    notas_resolucion: str  # Obligatorio para resolver
+
 class MetricasTickets(BaseModel):
     total_tickets: int
     tickets_por_estado: dict
