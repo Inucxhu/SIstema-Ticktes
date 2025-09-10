@@ -593,36 +593,92 @@ const GestionUsuarios = () => {
       {showEditModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowEditModal(false)}></div>
-          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
             <h3 className="text-lg font-semibold mb-4 text-gray-800">
               ✏️ Editar Usuario: {editingUser?.full_name}
             </h3>
             
             <form onSubmit={actualizarUsuario} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={editData.email}
-                  onChange={(e) => setEditData({...editData, email: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={editData.email}
+                    onChange={(e) => setEditData({...editData, email: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Nueva Contraseña (dejar vacío para no cambiar)
-                </label>
-                <input
-                  type="password"
-                  value={editData.password}
-                  onChange={(e) => setEditData({...editData, password: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                  placeholder="Nueva contraseña..."
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nueva Contraseña (dejar vacío para no cambiar)
+                  </label>
+                  <input
+                    type="password"
+                    value={editData.password}
+                    onChange={(e) => setEditData({...editData, password: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    placeholder="Nueva contraseña..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Rol
+                  </label>
+                  <select
+                    value={editData.role}
+                    onChange={(e) => setEditData({...editData, role: e.target.value})}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    required
+                  >
+                    <option value="Usuario final">Usuario Final</option>
+                    <option value="Soporte">Soporte</option>
+                    {user?.role === 'Administrador Maestro' && (
+                      <option value="Administrador">Administrador</option>
+                    )}
+                  </select>
+                </div>
+
+                {editData.role === 'Usuario final' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Campaña
+                    </label>
+                    <select
+                      value={editData.campana}
+                      onChange={(e) => setEditData({...editData, campana: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      {campanias.map(campana => (
+                        <option key={campana} value={campana}>{campana}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {editData.role === 'Soporte' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Grupo de Soporte
+                    </label>
+                    <select
+                      value={editData.grupo_soporte}
+                      onChange={(e) => setEditData({...editData, grupo_soporte: e.target.value})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      required
+                    >
+                      {gruposSoporte.map(grupo => (
+                        <option key={grupo} value={grupo}>{grupo}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -642,7 +698,7 @@ const GestionUsuarios = () => {
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
-                  {loading ? '⏳ Guardando...' : '💾 Guardar'}
+                  {loading ? '⏳ Guardando...' : '💾 Guardar Cambios'}
                 </button>
               </div>
             </form>
