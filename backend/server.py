@@ -599,6 +599,10 @@ async def update_user(
     if user_to_update["role"] in ["Administrador Maestro", "Administrador"] and current_user.role != UserRole.MASTER_ADMIN:
         raise HTTPException(status_code=403, detail="Only master admin can edit administrator users")
     
+    # Only master admin can create/edit admin roles
+    if update_data.role and update_data.role in [UserRole.MASTER_ADMIN, UserRole.ADMIN] and current_user.role != UserRole.MASTER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only master admin can assign administrator roles")
+    
     # Prepare update data
     update_dict = {}
     
@@ -613,6 +617,32 @@ async def update_user(
     # Update password if provided
     if update_data.password:
         update_dict["hashed_password"] = get_password_hash(update_data.password)
+    
+    # Update role if provided
+    if update_data.role:
+        update_dict["role"] = update_data.role
+        
+        # Clear role-specific fields when changing roles
+        if update_data.role != UserRole.END_USER:
+            update_dict["campana"] = None
+        if update_data.role != UserRole.SUPPORT:
+            update_dict["grupo_soporte"] = None
+    
+    # Update campaña if provided (only for end users)
+    if update_data.campana is not None:
+        # Get the current/new role
+        new_role = update_data.role if update_data.role else user_to_update.get("role")
+        if new_role != UserRole.END_USER:
+            raise HTTPException(status_code=400, detail="Campaigns can only be assigned to end users")
+        update_dict["campana"] = update_data.campana
+    
+    # Update grupo_soporte if provided (only for support users)
+    if update_data.grupo_soporte is not None:
+        # Get the current/new role
+        new_role = update_data.role if update_data.role else user_to_update.get("role")
+        if new_role != UserRole.SUPPORT:
+            raise HTTPException(status_code=400, detail="Support groups can only be assigned to support users")
+        update_dict["grupo_soporte"] = update_data.grupo_soporte
     
     if not update_dict:
         raise HTTPException(status_code=400, detail="No data provided for update")
