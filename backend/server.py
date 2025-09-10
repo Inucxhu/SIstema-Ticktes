@@ -458,7 +458,7 @@ async def obtener_ticket(ticket_id: str, current_user: User = Depends(get_curren
 async def actualizar_ticket(
     ticket_id: str, 
     update_data: TicketUpdate,
-    current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SUPPORT]))
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]))
 ):
     ticket = await db.tickets.find_one({"id": ticket_id})
     if not ticket:
@@ -496,12 +496,9 @@ async def asignar_ticket(
     return Ticket(**parse_from_mongo(updated_ticket))
 
 @api_router.get("/metricas", response_model=MetricasTickets)
-async def obtener_metricas(current_user: User = Depends(require_role([UserRole.ADMIN, UserRole.SUPPORT]))):
-    # Get tickets based on role
-    if current_user.role == UserRole.ADMIN:
-        tickets = await db.tickets.find().to_list(1000)
-    else:  # Support users see all tickets too
-        tickets = await db.tickets.find().to_list(1000)
+async def obtener_metricas(current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]))):
+    # Get all tickets for metrics
+    tickets = await db.tickets.find().to_list(1000)
     
     if not tickets:
         return MetricasTickets(
@@ -559,9 +556,32 @@ async def obtener_metricas(current_user: User = Depends(require_role([UserRole.A
 
 # User management (Admin only)
 @api_router.get("/users", response_model=List[User])
-async def get_users(current_user: User = Depends(require_role([UserRole.ADMIN]))):
+async def get_users(current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN]))):
     users = await db.users.find().to_list(100)
     return [User(**parse_from_mongo(user)) for user in users]
+
+@api_router.delete("/users/{user_id}")
+async def delete_user(
+    user_id: str,
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN]))
+):
+    # Can't delete yourself
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    # Only master admin can delete other admins
+    user_to_delete = await db.users.find_one({"id": user_id})
+    if not user_to_delete:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if user_to_delete["role"] in ["Administrador Maestro", "Administrador"] and current_user.role != UserRole.MASTER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only master admin can delete administrator users")
+    
+    result = await db.users.delete_one({"id": user_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "User deleted successfully"}
 
 # Basic route
 @api_router.get("/")
