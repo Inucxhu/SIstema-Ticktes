@@ -1240,7 +1240,7 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
           )}
           {canUpdate && ticket.estado === 'En Progreso' && (
             <button
-              onClick={() => cambiarEstado('Resuelto')}
+              onClick={abrirModalResolver}
               className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
             >
               ✅ Marcar Resuelto
@@ -1257,7 +1257,7 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
           {/* Master Admin puede resolver cualquier ticket directamente */}
           {currentUser.role === 'Administrador Maestro' && ticket.estado !== 'Resuelto' && ticket.estado !== 'Cerrado' && (
             <button
-              onClick={() => cambiarEstado('Resuelto')}
+              onClick={abrirModalResolver}
               className="px-3 py-1 bg-purple-500 text-white text-xs rounded hover:bg-purple-600 transition-colors"
             >
               👑 Resolver Directo
