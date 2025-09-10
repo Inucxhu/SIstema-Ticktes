@@ -162,63 +162,23 @@ const useNotifications = () => {
 
 // Login Component
 const LoginForm = () => {
-  const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     username: '',
-    email: '',
-    password: '',
-    role: 'Usuario final',
-    campana: 'Plata card'
+    password: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [campanias, setCampanias] = useState([]);
 
-  const { login, register } = useAuth();
-
-  useEffect(() => {
-    fetchCampanias();
-  }, []);
-
-  const fetchCampanias = async () => {
-    try {
-      const response = await axios.get(`${API}/auth/campanias`);
-      setCampanias(response.data);
-    } catch (error) {
-      console.error('Error fetching campaigns:', error);
-    }
-  };
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
-    if (isLogin) {
-      const result = await login(formData.username, formData.password);
-      if (!result.success) {
-        setError(result.error);
-      }
-    } else {
-      const registerData = {
-        username: formData.username,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role
-      };
-      
-      if (formData.role === 'Usuario final') {
-        registerData.campana = formData.campana;
-      }
-
-      const result = await register(registerData);
-      if (result.success) {
-        setIsLogin(true);
-        setError('');
-        alert('Usuario registrado exitosamente. Ahora puedes iniciar sesión.');
-      } else {
-        setError(result.error);
-      }
+    const result = await login(formData.username, formData.password);
+    if (!result.success) {
+      setError(result.error);
     }
     setLoading(false);
   };
@@ -232,29 +192,9 @@ const LoginForm = () => {
             Soporte360
           </h1>
           <p className="text-gray-600">Sistema inteligente de tickets</p>
-        </div>
-
-        <div className="flex mb-6">
-          <button
-            onClick={() => setIsLogin(true)}
-            className={`flex-1 py-2 px-4 rounded-l-lg font-medium transition-colors ${
-              isLogin 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Iniciar Sesión
-          </button>
-          <button
-            onClick={() => setIsLogin(false)}
-            className={`flex-1 py-2 px-4 rounded-r-lg font-medium transition-colors ${
-              !isLogin 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            }`}
-          >
-            Registrarse
-          </button>
+          <p className="text-sm text-gray-500 mt-2">
+            Ingresa con tu usuario y contraseña
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -267,24 +207,10 @@ const LoginForm = () => {
               value={formData.username}
               onChange={(e) => setFormData({...formData, username: e.target.value})}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ingresa tu usuario"
               required
             />
           </div>
-
-          {!isLogin && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          )}
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -295,45 +221,10 @@ const LoginForm = () => {
               value={formData.password}
               onChange={(e) => setFormData({...formData, password: e.target.value})}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ingresa tu contraseña"
               required
             />
           </div>
-
-          {!isLogin && (
-            <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Rol
-                </label>
-                <select
-                  value={formData.role}
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="Usuario final">Usuario Final</option>
-                  <option value="Soporte">Soporte</option>
-                  <option value="Administrador">Administrador</option>
-                </select>
-              </div>
-
-              {formData.role === 'Usuario final' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Campaña
-                  </label>
-                  <select
-                    value={formData.campana}
-                    onChange={(e) => setFormData({...formData, campana: e.target.value})}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {campanias.map(campana => (
-                      <option key={campana} value={campana}>{campana}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-            </>
-          )}
 
           {error && (
             <div className="bg-red-50 text-red-700 p-3 rounded-lg text-sm">
@@ -350,9 +241,18 @@ const LoginForm = () => {
                 : 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl'
             }`}
           >
-            {loading ? '⏳ Procesando...' : (isLogin ? '🚀 Iniciar Sesión' : '📝 Registrarse')}
+            {loading ? '⏳ Iniciando sesión...' : '🚀 Iniciar Sesión'}
           </button>
         </form>
+
+        <div className="mt-6 text-center text-sm text-gray-500">
+          <p>¿No tienes acceso? Contacta a tu administrador</p>
+          <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+            <p className="font-medium">Admin Maestro:</p>
+            <p>Usuario: <code className="bg-white px-1 rounded">ecruz</code></p>
+            <p>Contraseña: <code className="bg-white px-1 rounded">admin123</code></p>
+          </div>
+        </div>
       </div>
     </div>
   );
