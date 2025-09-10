@@ -558,7 +558,17 @@ async def obtener_metricas(current_user: User = Depends(require_role([UserRole.M
 @api_router.get("/users", response_model=List[User])
 async def get_users(current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN]))):
     users = await db.users.find().to_list(100)
-    return [User(**parse_from_mongo(user)) for user in users]
+    result_users = []
+    
+    for user in users:
+        parsed_user = parse_from_mongo(user)
+        # Add full_name if missing (backward compatibility)
+        if 'full_name' not in parsed_user or not parsed_user['full_name']:
+            parsed_user['full_name'] = parsed_user.get('username', 'Usuario')
+        
+        result_users.append(User(**parsed_user))
+    
+    return result_users
 
 @api_router.delete("/users/{user_id}")
 async def delete_user(
