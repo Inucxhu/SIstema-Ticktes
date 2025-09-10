@@ -923,6 +923,89 @@ const GestionUsuarios = () => {
     </div>
   );
 };
+
+// Notification Panel
+const NotificationPanel = ({ isOpen, onClose }) => {
+  const { notifications, markAsRead, markAllAsRead, removeNotification } = useNotifications();
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-40">
+      <div className="absolute inset-0 bg-black bg-opacity-30" onClick={onClose}></div>
+      <div className="absolute top-16 right-4 w-96 max-h-96 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-4 flex justify-between items-center">
+          <h3 className="font-bold">🔔 Notificaciones</h3>
+          <div className="flex gap-2">
+            {notifications.length > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded hover:bg-opacity-30"
+              >
+                Marcar todas
+              </button>
+            )}
+            <button onClick={onClose} className="text-xl">×</button>
+          </div>
+        </div>
+        
+        <div className="max-h-80 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <div className="text-4xl mb-2">🔕</div>
+              <p>No hay notificaciones</p>
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 ${!notification.read ? 'bg-blue-50' : ''}`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start space-x-3">
+                    <div className="text-xl">
+                      {notification.type === 'ticket_created' ? '🎫' : 
+                       notification.type === 'ticket_updated' ? '🔄' :
+                       notification.priority === 'Alta' ? '🚨' : '🔔'}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-sm text-gray-800 mb-1">
+                        {notification.title}
+                      </div>
+                      <div className="text-xs text-gray-600 line-clamp-2">
+                        {notification.message}
+                      </div>
+                      <div className="text-xs text-gray-400 mt-1">
+                        {notification.timestamp.toLocaleString('es-ES')}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    {!notification.read && (
+                      <button
+                        onClick={() => markAsRead(notification.id)}
+                        className="w-3 h-3 bg-blue-500 rounded-full"
+                        title="Marcar como leído"
+                      ></button>
+                    )}
+                    <button
+                      onClick={() => removeNotification(notification.id)}
+                      className="text-gray-400 hover:text-gray-600 text-sm"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Crear Ticket Component
 const CrearTicket = ({ onTicketCreado }) => {
   const [formulario, setFormulario] = useState({
     titulo: '',
