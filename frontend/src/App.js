@@ -1223,7 +1223,10 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
         </span>
         {ticket.asignado_a && (
           <span className="text-xs text-gray-500 ml-4">
-            Asignado a equipo de soporte
+            {ticket.asignado_a === currentUser.id 
+              ? (currentUser.role === 'Administrador Maestro' ? 'Asignado a ti (Master Admin)' : 'Asignado a ti')
+              : 'Asignado a equipo'
+            }
           </span>
         )}
       </div>
