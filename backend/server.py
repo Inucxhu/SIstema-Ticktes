@@ -39,9 +39,15 @@ api_router = APIRouter(prefix="/api")
 
 # Enums
 class UserRole(str, Enum):
+    MASTER_ADMIN = "Administrador Maestro"
     ADMIN = "Administrador"
     SUPPORT = "Soporte"
     END_USER = "Usuario final"
+
+class GrupoSoporte(str, Enum):
+    SOPORTE_GENERAL = "Soporte"
+    SOPORTE_TECNICO = "Soporte Técnico"
+    SOPORTE_SISTEMAS = "Soporte Sistemas"
 
 class EstadoTicket(str, Enum):
     NUEVO = "Nuevo"
