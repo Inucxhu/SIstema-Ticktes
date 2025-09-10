@@ -1049,6 +1049,9 @@ const CrearTicket = ({ onTicketCreado }) => {
 // Ticket Card Component
 const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
   const { addNotification } = useNotifications();
+  const [showResolveModal, setShowResolveModal] = useState(false);
+  const [resolveNotes, setResolveNotes] = useState('');
+  const [resolving, setResolving] = useState(false);
   
   const getPrioridadColor = (prioridad) => {
     switch(prioridad) {
