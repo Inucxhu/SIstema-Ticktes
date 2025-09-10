@@ -252,6 +252,13 @@ async def create_master_user():
         print("   Password: admin123")
         print("   Role: Administrador Maestro")
     else:
+        # Update existing master user to include full_name if missing
+        if 'full_name' not in existing_master or not existing_master.get('full_name'):
+            await db.users.update_one(
+                {"email": "ecruz@hccenters.com"},
+                {"$set": {"full_name": "Eduardo Cruz"}}
+            )
+            logger.info("✅ Updated master admin user with full_name")
         logger.info("✅ Master admin user already exists")
 
 # AI Classification function
