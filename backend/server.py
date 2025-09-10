@@ -434,8 +434,8 @@ async def crear_ticket(
 
 @api_router.get("/tickets", response_model=List[Ticket])
 async def obtener_tickets(current_user: User = Depends(get_current_active_user)):
-    # Admins and support see all tickets, end users see only their tickets
-    if current_user.role in [UserRole.ADMIN, UserRole.SUPPORT]:
+    # Master Admin and Admin see all tickets, Support sees all, End users see only their tickets
+    if current_user.role in [UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]:
         tickets = await db.tickets.find().sort("fecha_creacion", -1).to_list(100)
     else:
         tickets = await db.tickets.find({"usuario_id": current_user.id}).sort("fecha_creacion", -1).to_list(100)
