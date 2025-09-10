@@ -467,7 +467,10 @@ const GestionUsuarios = () => {
     setEditingUser(usuario);
     setEditData({
       email: usuario.email,
-      password: ''
+      password: '',
+      role: usuario.role,
+      campana: usuario.campana || (campanias.length > 0 ? campanias[0] : ''),
+      grupo_soporte: usuario.grupo_soporte || (gruposSoporte.length > 0 ? gruposSoporte[0] : '')
     });
     setShowEditModal(true);
   };
