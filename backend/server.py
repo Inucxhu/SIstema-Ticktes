@@ -131,7 +131,7 @@ class Ticket(BaseModel):
     categoria: Optional[CategoriaTicket] = None
     departamento: Optional[DepartamentoTicket] = None
     tiempo_estimado: Optional[str] = None
-    usuario_id: str  # ID del usuario que creó el ticket
+    usuario_id: Optional[str] = None  # Make optional for backward compatibility
     usuario_email: str
     campana: Optional[CampanasEnum] = None  # Campaña del usuario
     asignado_a: Optional[str] = None  # ID del usuario de soporte asignado
