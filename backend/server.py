@@ -84,7 +84,9 @@ class UserCreate(BaseModel):
     username: str
     email: str
     password: str
+    full_name: str
     role: UserRole
+    grupo_soporte: Optional[GrupoSoporte] = None  # Solo para usuarios de soporte
     campana: Optional[CampanasEnum] = None  # Solo para usuarios finales
 
 class UserLogin(BaseModel):
@@ -95,9 +97,12 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     email: str
+    full_name: str
     role: UserRole
+    grupo_soporte: Optional[GrupoSoporte] = None
     campana: Optional[CampanasEnum] = None
     is_active: bool = True
+    created_by: Optional[str] = None  # ID del usuario que lo creó
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class UserInDB(User):
