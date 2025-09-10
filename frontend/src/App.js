@@ -491,6 +491,20 @@ const GestionUsuarios = () => {
         updateData.password = editData.password;
       }
 
+      if (editData.role !== editingUser.role) {
+        updateData.role = editData.role;
+      }
+
+      // Handle campaign for end users
+      if (editData.role === 'Usuario final' && editData.campana !== editingUser.campana) {
+        updateData.campana = editData.campana;
+      }
+
+      // Handle support group for support users
+      if (editData.role === 'Soporte' && editData.grupo_soporte !== editingUser.grupo_soporte) {
+        updateData.grupo_soporte = editData.grupo_soporte;
+      }
+
       if (Object.keys(updateData).length === 0) {
         addNotification({
           type: 'warning',
@@ -513,7 +527,7 @@ const GestionUsuarios = () => {
 
       setShowEditModal(false);
       setEditingUser(null);
-      setEditData({ email: '', password: '' });
+      setEditData({ email: '', password: '', role: '', campana: '', grupo_soporte: '' });
       cargarUsuarios();
     } catch (error) {
       addNotification({
