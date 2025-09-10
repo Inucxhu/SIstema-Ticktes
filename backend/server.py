@@ -135,6 +135,10 @@ class Ticket(BaseModel):
     usuario_email: str
     campana: Optional[CampanasEnum] = None  # Campaña del usuario
     asignado_a: Optional[str] = None  # ID del usuario de soporte asignado
+    notas_resolucion: Optional[str] = None  # Notas del técnico al resolver
+    resuelto_por_id: Optional[str] = None  # ID del usuario que resolvió
+    resuelto_por_nombre: Optional[str] = None  # Nombre completo del que resolvió
+    fecha_resolucion: Optional[datetime] = None  # Cuándo se resolvió
     fecha_creacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     fecha_actualizacion: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
