@@ -351,7 +351,368 @@ const NotificationContainer = () => {
   );
 };
 
-// Crear Ticket Component
+// Gestión de Usuarios Component (Solo para Master Admin y Admin)
+const GestionUsuarios = () => {
+  const [usuarios, setUsuarios] = useState([]);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [campanias, setCampanias] = useState([]);
+  const [gruposSoporte, setGruposSoporte] = useState([]);
+  const { addNotification } = useNotifications();
+  const { user } = useAuth();
+
+  const [formData, setFormData] = useState({
+    username: '',
+    email: '',
+    password: '',
+    full_name: '',
+    role: 'Usuario final',
+    campana: '',
+    grupo_soporte: ''
+  });
+
+  useEffect(() => {
+    cargarUsuarios();
+    cargarCampanias();
+    cargarGruposSoporte();
+  }, []);
+
+  const cargarUsuarios = async () => {
+    try {
+      const response = await axios.get(`${API}/users`);
+      setUsuarios(response.data);
+    } catch (error) {
+      console.error('Error cargando usuarios:', error);
+    }
+  };
+
+  const cargarCampanias = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/campanias`);
+      setCampanias(response.data);
+      if (response.data.length > 0) {
+        setFormData(prev => ({ ...prev, campana: response.data[0] }));
+      }
+    } catch (error) {
+      console.error('Error cargando campañas:', error);
+    }
+  };
+
+  const cargarGruposSoporte = async () => {
+    try {
+      const response = await axios.get(`${API}/auth/grupos-soporte`);
+      setGruposSoporte(response.data);
+      if (response.data.length > 0) {
+        setFormData(prev => ({ ...prev, grupo_soporte: response.data[0] }));
+      }
+    } catch (error) {
+      console.error('Error cargando grupos de soporte:', error);
+    }
+  };
+
+  const crearUsuario = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const userData = { ...formData };
+      
+      // Remove unnecessary fields based on role
+      if (userData.role !== 'Usuario final') {
+        delete userData.campana;
+      }
+      if (userData.role !== 'Soporte') {
+        delete userData.grupo_soporte;
+      }
+
+      const response = await axios.post(`${API}/auth/register`, userData);
+      
+      addNotification({
+        type: 'success',
+        title: '✅ Usuario Creado',
+        message: `Usuario ${userData.full_name} creado exitosamente`,
+        duration: 5000
+      });
+
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        full_name: '',
+        role: 'Usuario final',
+        campana: campanias[0] || '',
+        grupo_soporte: gruposSoporte[0] || ''
+      });
+
+      setShowCreateForm(false);
+      cargarUsuarios();
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: '❌ Error al Crear Usuario',
+        message: error.response?.data?.detail || 'No se pudo crear el usuario',
+        duration: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const eliminarUsuario = async (userId, userName) => {
+    if (window.confirm(`¿Estás seguro de eliminar al usuario ${userName}?`)) {
+      try {
+        await axios.delete(`${API}/users/${userId}`);
+        
+        addNotification({
+          type: 'success',
+          title: '✅ Usuario Eliminado',
+          message: `Usuario ${userName} eliminado exitosamente`,
+          duration: 5000
+        });
+
+        cargarUsuarios();
+      } catch (error) {
+        addNotification({
+          type: 'error',
+          title: '❌ Error al Eliminar',
+          message: error.response?.data?.detail || 'No se pudo eliminar el usuario',
+          duration: 5000
+        });
+      }
+    }
+  };
+
+  const getRoleColor = (role) => {
+    switch(role) {
+      case 'Administrador Maestro': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Administrador': return 'bg-red-100 text-red-800 border-red-200';
+      case 'Soporte': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Usuario final': return 'bg-green-100 text-green-800 border-green-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-800">
+          👥 Gestión de Usuarios ({usuarios.length})
+        </h2>
+        <button
+          onClick={() => setShowCreateForm(!showCreateForm)}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+        >
+          {showCreateForm ? '❌ Cancelar' : '➕ Crear Usuario'}
+        </button>
+      </div>
+
+      {showCreateForm && (
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">Crear Nuevo Usuario</h3>
+          
+          <form onSubmit={crearUsuario} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Nombre Completo
+              </label>
+              <input
+                type="text"
+                value={formData.full_name}
+                onChange={(e) => setFormData({...formData, full_name: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Usuario
+              </label>
+              <input
+                type="text"
+                value={formData.username}
+                onChange={(e) => setFormData({...formData, username: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contraseña
+              </label>
+              <input
+                type="password"
+                value={formData.password}
+                onChange={(e) => setFormData({...formData, password: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Rol
+              </label>
+              <select
+                value={formData.role}
+                onChange={(e) => setFormData({...formData, role: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="Usuario final">Usuario Final</option>
+                <option value="Soporte">Soporte</option>
+                {user?.role === 'Administrador Maestro' && (
+                  <option value="Administrador">Administrador</option>
+                )}
+              </select>
+            </div>
+
+            {formData.role === 'Usuario final' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Campaña
+                </label>
+                <select
+                  value={formData.campana}
+                  onChange={(e) => setFormData({...formData, campana: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  {campanias.map(campana => (
+                    <option key={campana} value={campana}>{campana}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formData.role === 'Soporte' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Grupo de Soporte
+                </label>
+                <select
+                  value={formData.grupo_soporte}
+                  onChange={(e) => setFormData({...formData, grupo_soporte: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  {gruposSoporte.map(grupo => (
+                    <option key={grupo} value={grupo}>{grupo}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div className="md:col-span-2">
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full py-3 px-6 rounded-lg font-medium transition-all ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg'
+                }`}
+              >
+                {loading ? '⏳ Creando Usuario...' : '👤 Crear Usuario'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Usuario
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Rol
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Detalles
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Creado
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Acciones
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {usuarios.map((usuario) => (
+                <tr key={usuario.id} className="hover:bg-gray-50">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div className="ml-4">
+                        <div className="text-sm font-medium text-gray-900">
+                          {usuario.full_name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {usuario.email}
+                        </div>
+                        <div className="text-xs text-gray-400">
+                          @{usuario.username}
+                        </div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full border ${getRoleColor(usuario.role)}`}>
+                      {usuario.role}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {usuario.role === 'Usuario final' && usuario.campana && (
+                      <span className="bg-blue-100 text-blue-800 px-2 py-1 text-xs rounded">
+                        📱 {usuario.campana}
+                      </span>
+                    )}
+                    {usuario.role === 'Soporte' && usuario.grupo_soporte && (
+                      <span className="bg-green-100 text-green-800 px-2 py-1 text-xs rounded">
+                        🛠️ {usuario.grupo_soporte}
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {new Date(usuario.created_at).toLocaleDateString('es-ES')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    {usuario.id !== user?.id && usuario.role !== 'Administrador Maestro' && (
+                      <button
+                        onClick={() => eliminarUsuario(usuario.id, usuario.full_name)}
+                        className="text-red-600 hover:text-red-900 ml-4"
+                      >
+                        🗑️ Eliminar
+                      </button>
+                    )}
+                    {usuario.role === 'Administrador Maestro' && (
+                      <span className="text-purple-600 font-medium">👑 Maestro</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
 const CrearTicket = ({ onTicketCreado }) => {
   const [formulario, setFormulario] = useState({
     titulo: '',
