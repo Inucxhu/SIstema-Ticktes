@@ -228,6 +228,32 @@ def require_role(allowed_roles: List[UserRole]):
         return current_user
     return role_checker
 
+# Initialize Master User
+async def create_master_user():
+    """Create the master admin user Eduardo Cruz if it doesn't exist"""
+    existing_master = await db.users.find_one({"email": "ecruz@hccenters.com"})
+    if not existing_master:
+        master_data = {
+            "username": "ecruz",
+            "email": "ecruz@hccenters.com",
+            "full_name": "Eduardo Cruz",
+            "role": UserRole.MASTER_ADMIN,
+            "hashed_password": get_password_hash("admin123"),
+            "is_active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "id": str(uuid.uuid4())
+        }
+        
+        await db.users.insert_one(master_data)
+        logger.info("✅ Master admin user Eduardo Cruz created successfully")
+        print("🎯 MASTER ADMIN CREATED:")
+        print("   Username: ecruz")
+        print("   Email: ecruz@hccenters.com") 
+        print("   Password: admin123")
+        print("   Role: Administrador Maestro")
+    else:
+        logger.info("✅ Master admin user already exists")
+
 # AI Classification function
 async def clasificar_ticket_con_ia(titulo: str, descripcion: str) -> dict:
     try:
