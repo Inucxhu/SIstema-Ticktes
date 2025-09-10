@@ -1250,6 +1250,18 @@ function MainApp() {
                     ➕ Crear
                   </button>
                 )}
+                {(user.role === 'Administrador Maestro' || user.role === 'Administrador') && (
+                  <button
+                    onClick={() => setVista('usuarios')}
+                    className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                      vista === 'usuarios' 
+                        ? 'bg-blue-100 text-blue-700' 
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    👥 Usuarios
+                  </button>
+                )}
               </nav>
               
               <button
