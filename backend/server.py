@@ -78,6 +78,7 @@ class CampanasEnum(str, Enum):
     PEPSICO = "Pepsico"
     SXM = "SXM"
     YYC = "YYC"
+    BOTS_IA = "Bots IA"
 
 # Auth Models
 class UserCreate(BaseModel):
