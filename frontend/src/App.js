@@ -582,6 +582,7 @@ function App() {
   const [cargando, setCargando] = useState(true);
   const [vista, setVista] = useState('tickets');
   const [showNotifications, setShowNotifications] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
 
   const cargarTickets = async () => {
     try {
@@ -605,14 +606,18 @@ function App() {
     setCargando(true);
     await Promise.all([cargarTickets(), cargarMetricas()]);
     setCargando(false);
+    if (initialLoad) {
+      setInitialLoad(false);
+    }
   };
 
   useEffect(() => {
     cargarDatos();
     
-    // Auto-refresh cada 30 segundos
+    // Auto-refresh cada 30 segundos (sin notificaciones)
     const interval = setInterval(() => {
-      cargarDatos();
+      cargarTickets();
+      cargarMetricas();
     }, 30000);
 
     return () => clearInterval(interval);
