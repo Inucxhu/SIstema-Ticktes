@@ -395,6 +395,10 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def get_campanias():
     return [campana.value for campana in CampanasEnum]
 
+@api_router.get("/auth/grupos-soporte", response_model=List[str])
+async def get_grupos_soporte():
+    return [grupo.value for grupo in GrupoSoporte]
+
 # Ticket Routes (Protected)
 @api_router.post("/tickets", response_model=Ticket)
 async def crear_ticket(
