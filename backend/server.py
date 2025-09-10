@@ -581,6 +581,52 @@ async def get_users(current_user: User = Depends(require_role([UserRole.MASTER_A
     
     return result_users
 
+@api_router.put("/users/{user_id}", response_model=User)
+async def update_user(
+    user_id: str,
+    update_data: UserUpdate,
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN]))
+):
+    # Find the user to update
+    user_to_update = await db.users.find_one({"id": user_id})
+    if not user_to_update:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Only master admin can edit other admins
+    if user_to_update["role"] in ["Administrador Maestro", "Administrador"] and current_user.role != UserRole.MASTER_ADMIN:
+        raise HTTPException(status_code=403, detail="Only master admin can edit administrator users")
+    
+    # Prepare update data
+    update_dict = {}
+    
+    # Update email if provided
+    if update_data.email:
+        # Check if email is already taken by another user
+        existing_email = await db.users.find_one({"email": update_data.email, "id": {"$ne": user_id}})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already in use by another user")
+        update_dict["email"] = update_data.email
+    
+    # Update password if provided
+    if update_data.password:
+        update_dict["hashed_password"] = get_password_hash(update_data.password)
+    
+    if not update_dict:
+        raise HTTPException(status_code=400, detail="No data provided for update")
+    
+    # Update the user
+    await db.users.update_one({"id": user_id}, {"$set": update_dict})
+    
+    # Return updated user
+    updated_user = await db.users.find_one({"id": user_id})
+    parsed_user = parse_from_mongo(updated_user)
+    
+    # Add full_name if missing (backward compatibility)
+    if 'full_name' not in parsed_user or not parsed_user['full_name']:
+        parsed_user['full_name'] = parsed_user.get('username', 'Usuario')
+    
+    return User(**parsed_user)
+
 @api_router.delete("/users/{user_id}")
 async def delete_user(
     user_id: str,
