@@ -1285,6 +1285,10 @@ function MainApp() {
           <CrearTicket onTicketCreado={manejarTicketCreado} />
         )}
         
+        {vista === 'usuarios' && (user.role === 'Administrador Maestro' || user.role === 'Administrador') && (
+          <GestionUsuarios />
+        )}
+        
         {vista === 'tickets' && (
           <div>
             <div className="flex justify-between items-center mb-6">
