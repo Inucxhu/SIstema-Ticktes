@@ -1189,7 +1189,8 @@ function MainApp() {
 
   const getRoleColor = (role) => {
     switch(role) {
-      case 'Administrador': return 'bg-purple-100 text-purple-800';
+      case 'Administrador Maestro': return 'bg-purple-100 text-purple-800';
+      case 'Administrador': return 'bg-red-100 text-red-800';
       case 'Soporte': return 'bg-blue-100 text-blue-800';
       case 'Usuario final': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
