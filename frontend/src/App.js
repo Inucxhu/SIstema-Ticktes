@@ -1182,6 +1182,58 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow p-6 border border-gray-100">
+      {/* Modal de Resolución */}
+      {showResolveModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowResolveModal(false)}></div>
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              ✅ Resolver Ticket: {ticket.titulo}
+            </h3>
+            
+            <form onSubmit={resolverTicket} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Notas de Resolución *
+                </label>
+                <textarea
+                  value={resolveNotes}
+                  onChange={(e) => setResolveNotes(e.target.value)}
+                  rows={4}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="Describe la solución implementada, pasos realizados y cualquier información relevante..."
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Estas notas serán visibles en el historial del ticket.
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowResolveModal(false)}
+                  className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={resolving}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                    resolving
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-green-600 hover:bg-green-700 text-white'
+                  }`}
+                >
+                  {resolving ? '⏳ Resolviendo...' : '✅ Resolver Ticket'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-between items-start mb-4">
         <h3 className="text-lg font-semibold text-gray-800 flex-1">
           {ticket.titulo}
@@ -1199,6 +1251,27 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
       <p className="text-gray-600 mb-4 line-clamp-3">
         {ticket.descripcion}
       </p>
+
+      {/* Mostrar notas de resolución si existen */}
+      {ticket.notas_resolucion && (
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start">
+            <div className="text-green-500 mr-2 mt-0.5">📝</div>
+            <div className="flex-1">
+              <h4 className="font-medium text-green-800 mb-2">Notas de Resolución:</h4>
+              <p className="text-sm text-green-700 mb-2">{ticket.notas_resolucion}</p>
+              <div className="text-xs text-green-600">
+                <span className="font-medium">Resuelto por:</span> {ticket.resuelto_por_nombre}
+                {ticket.fecha_resolucion && (
+                  <span className="ml-2">
+                    • <span className="font-medium">Fecha:</span> {new Date(ticket.fecha_resolucion).toLocaleString('es-ES')}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
         <div>
