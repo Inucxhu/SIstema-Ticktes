@@ -453,9 +453,24 @@ async def obtener_tickets(current_user: User = Depends(get_current_active_user))
     if current_user.role in [UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]:
         tickets = await db.tickets.find().sort("fecha_creacion", -1).to_list(100)
     else:
-        tickets = await db.tickets.find({"usuario_id": current_user.id}).sort("fecha_creacion", -1).to_list(100)
+        # For end users, show tickets where usuario_id matches or usuario_email matches (for backward compatibility)
+        tickets = await db.tickets.find({
+            "$or": [
+                {"usuario_id": current_user.id},
+                {"usuario_email": current_user.email}
+            ]
+        }).sort("fecha_creacion", -1).to_list(100)
     
-    return [Ticket(**parse_from_mongo(ticket)) for ticket in tickets]
+    result_tickets = []
+    for ticket in tickets:
+        parsed_ticket = parse_from_mongo(ticket)
+        # Add usuario_id if missing (backward compatibility)
+        if 'usuario_id' not in parsed_ticket or not parsed_ticket['usuario_id']:
+            parsed_ticket['usuario_id'] = None
+        
+        result_tickets.append(Ticket(**parsed_ticket))
+    
+    return result_tickets
 
 @api_router.get("/tickets/{ticket_id}", response_model=Ticket)
 async def obtener_ticket(ticket_id: str, current_user: User = Depends(get_current_active_user)):
