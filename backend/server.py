@@ -188,6 +188,8 @@ def prepare_for_mongo(data):
         data['fecha_creacion'] = data['fecha_creacion'].isoformat()
     if isinstance(data.get('fecha_actualizacion'), datetime):
         data['fecha_actualizacion'] = data['fecha_actualizacion'].isoformat()
+    if isinstance(data.get('fecha_resolucion'), datetime):
+        data['fecha_resolucion'] = data['fecha_resolucion'].isoformat()
     if isinstance(data.get('created_at'), datetime):
         data['created_at'] = data['created_at'].isoformat()
     return data
@@ -197,6 +199,8 @@ def parse_from_mongo(item):
         item['fecha_creacion'] = datetime.fromisoformat(item['fecha_creacion'])
     if isinstance(item.get('fecha_actualizacion'), str):
         item['fecha_actualizacion'] = datetime.fromisoformat(item['fecha_actualizacion'])
+    if isinstance(item.get('fecha_resolucion'), str):
+        item['fecha_resolucion'] = datetime.fromisoformat(item['fecha_resolucion'])
     if isinstance(item.get('created_at'), str):
         item['created_at'] = datetime.fromisoformat(item['created_at'])
     return item
