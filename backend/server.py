@@ -306,7 +306,11 @@ async def clasificar_ticket_con_ia(titulo: str, descripcion: str) -> dict:
 
 # Auth Routes
 @api_router.post("/auth/register", response_model=User)
-async def register_user(user_data: UserCreate):
+async def register_user(
+    user_data: UserCreate,
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN]))
+):
+    """Only master admin and admin users can create new users"""
     # Check if user exists
     existing_user = await get_user_from_db(user_data.username)
     if existing_user:
@@ -323,6 +327,13 @@ async def register_user(user_data: UserCreate):
             detail="Email already registered"
         )
     
+    # Validate grupo_soporte for support users
+    if user_data.role == UserRole.SUPPORT and not user_data.grupo_soporte:
+        raise HTTPException(
+            status_code=400,
+            detail="Grupo de soporte is required for support users"
+        )
+    
     # Validate campaña for end users
     if user_data.role == UserRole.END_USER and not user_data.campana:
         raise HTTPException(
@@ -330,10 +341,18 @@ async def register_user(user_data: UserCreate):
             detail="Campaña is required for end users"
         )
     
+    # Only master admin can create other admins
+    if user_data.role in [UserRole.MASTER_ADMIN, UserRole.ADMIN] and current_user.role != UserRole.MASTER_ADMIN:
+        raise HTTPException(
+            status_code=403,
+            detail="Only master admin can create administrator users"
+        )
+    
     # Create user
     hashed_password = get_password_hash(user_data.password)
     user_dict = user_data.dict()
     user_dict.pop("password")
+    user_dict["created_by"] = current_user.id
     user_obj = User(**user_dict)
     
     user_in_db = UserInDB(**user_obj.dict(), hashed_password=hashed_password)
@@ -341,6 +360,14 @@ async def register_user(user_data: UserCreate):
     
     await db.users.insert_one(user_mongo)
     return user_obj
+
+@api_router.post("/auth/register-public", response_model=dict)
+async def register_public():
+    """Public registration disabled - only admins can create users"""
+    raise HTTPException(
+        status_code=403,
+        detail="Public registration is disabled. Contact your administrator to create an account."
+    )
 
 @api_router.post("/auth/login", response_model=Token)
 async def login_user(user_credentials: UserLogin):
