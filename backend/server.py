@@ -499,6 +499,41 @@ async def obtener_ticket(ticket_id: str, current_user: User = Depends(get_curren
     
     return Ticket(**parsed_ticket)
 
+@api_router.post("/tickets/{ticket_id}/resolve", response_model=Ticket)
+async def resolver_ticket(
+    ticket_id: str,
+    resolve_data: TicketResolve,
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]))
+):
+    ticket = await db.tickets.find_one({"id": ticket_id})
+    if not ticket:
+        raise HTTPException(status_code=404, detail="Ticket no encontrado")
+    
+    # Check if notes are provided
+    if not resolve_data.notas_resolucion or not resolve_data.notas_resolucion.strip():
+        raise HTTPException(status_code=400, detail="Las notas de resolución son obligatorias")
+    
+    # Update ticket with resolution data
+    update_data = {
+        "estado": EstadoTicket.RESUELTO,
+        "notas_resolucion": resolve_data.notas_resolucion.strip(),
+        "resuelto_por_id": current_user.id,
+        "resuelto_por_nombre": current_user.full_name or current_user.username,
+        "fecha_resolucion": datetime.now(timezone.utc).isoformat(),
+        "fecha_actualizacion": datetime.now(timezone.utc).isoformat()
+    }
+    
+    await db.tickets.update_one({"id": ticket_id}, {"$set": update_data})
+    
+    # Return updated ticket
+    updated_ticket = await db.tickets.find_one({"id": ticket_id})
+    parsed_ticket = parse_from_mongo(updated_ticket)
+    # Add usuario_id if missing (backward compatibility)
+    if 'usuario_id' not in parsed_ticket or not parsed_ticket['usuario_id']:
+        parsed_ticket['usuario_id'] = None
+    
+    return Ticket(**parsed_ticket)
+
 @api_router.put("/tickets/{ticket_id}", response_model=Ticket)
 async def actualizar_ticket(
     ticket_id: str, 
