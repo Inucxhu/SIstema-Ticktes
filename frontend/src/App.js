@@ -370,7 +370,10 @@ const GestionUsuarios = () => {
 
   const [editData, setEditData] = useState({
     email: '',
-    password: ''
+    password: '',
+    role: '',
+    campana: '',
+    grupo_soporte: ''
   });
 
   useEffect(() => {
