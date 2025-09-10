@@ -350,6 +350,8 @@ const NotificationContainer = () => {
 const GestionUsuarios = () => {
   const [usuarios, setUsuarios] = useState([]);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(false);
   const [campanias, setCampanias] = useState([]);
   const [gruposSoporte, setGruposSoporte] = useState([]);
@@ -364,6 +366,11 @@ const GestionUsuarios = () => {
     role: 'Usuario final',
     campana: '',
     grupo_soporte: ''
+  });
+
+  const [editData, setEditData] = useState({
+    email: '',
+    password: ''
   });
 
   useEffect(() => {
@@ -453,6 +460,67 @@ const GestionUsuarios = () => {
     }
   };
 
+  const abrirEditarUsuario = (usuario) => {
+    setEditingUser(usuario);
+    setEditData({
+      email: usuario.email,
+      password: ''
+    });
+    setShowEditModal(true);
+  };
+
+  const actualizarUsuario = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const updateData = {};
+      
+      // Only send fields that are different or password if provided
+      if (editData.email !== editingUser.email) {
+        updateData.email = editData.email;
+      }
+      
+      if (editData.password.trim()) {
+        updateData.password = editData.password;
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        addNotification({
+          type: 'warning',
+          title: '⚠️ Sin Cambios',
+          message: 'No se detectaron cambios para actualizar',
+          duration: 5000
+        });
+        setLoading(false);
+        return;
+      }
+
+      await axios.put(`${API}/users/${editingUser.id}`, updateData);
+      
+      addNotification({
+        type: 'success',
+        title: '✅ Usuario Actualizado',
+        message: `Usuario ${editingUser.full_name} actualizado exitosamente`,
+        duration: 5000
+      });
+
+      setShowEditModal(false);
+      setEditingUser(null);
+      setEditData({ email: '', password: '' });
+      cargarUsuarios();
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: '❌ Error al Actualizar',
+        message: error.response?.data?.detail || 'No se pudo actualizar el usuario',
+        duration: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const eliminarUsuario = async (userId, userName) => {
     if (window.confirm(`¿Estás seguro de eliminar al usuario ${userName}?`)) {
       try {
@@ -500,6 +568,67 @@ const GestionUsuarios = () => {
           {showCreateForm ? '❌ Cancelar' : '➕ Crear Usuario'}
         </button>
       </div>
+
+      {/* Modal de Edición */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setShowEditModal(false)}></div>
+          <div className="relative bg-white rounded-lg shadow-xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4 text-gray-800">
+              ✏️ Editar Usuario: {editingUser?.full_name}
+            </h3>
+            
+            <form onSubmit={actualizarUsuario} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={editData.email}
+                  onChange={(e) => setEditData({...editData, email: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Nueva Contraseña (dejar vacío para no cambiar)
+                </label>
+                <input
+                  type="password"
+                  value={editData.password}
+                  onChange={(e) => setEditData({...editData, password: e.target.value})}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Nueva contraseña..."
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+                    loading
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {loading ? '⏳ Guardando...' : '💾 Guardar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showCreateForm && (
         <div className="bg-white rounded-lg shadow-lg p-6">
@@ -687,16 +816,26 @@ const GestionUsuarios = () => {
                     {new Date(usuario.created_at).toLocaleDateString('es-ES')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    {usuario.id !== user?.id && usuario.role !== 'Administrador Maestro' && (
-                      <button
-                        onClick={() => eliminarUsuario(usuario.id, usuario.full_name)}
-                        className="text-red-600 hover:text-red-900 ml-4"
-                      >
-                        🗑️ Eliminar
-                      </button>
+                    {usuario.id !== user?.id && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => abrirEditarUsuario(usuario)}
+                          className="text-blue-600 hover:text-blue-900"
+                        >
+                          ✏️ Editar
+                        </button>
+                        {usuario.role !== 'Administrador Maestro' && (
+                          <button
+                            onClick={() => eliminarUsuario(usuario.id, usuario.full_name)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            🗑️ Eliminar
+                          </button>
+                        )}
+                      </div>
                     )}
-                    {usuario.role === 'Administrador Maestro' && (
-                      <span className="text-purple-600 font-medium">👑 Maestro</span>
+                    {usuario.role === 'Administrador Maestro' && usuario.id === user?.id && (
+                      <span className="text-purple-600 font-medium">👑 Tú</span>
                     )}
                   </td>
                 </tr>
