@@ -97,7 +97,7 @@ class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     username: str
     email: str
-    full_name: str
+    full_name: Optional[str] = None  # Make it optional for backward compatibility
     role: UserRole
     grupo_soporte: Optional[GrupoSoporte] = None
     campana: Optional[CampanasEnum] = None
