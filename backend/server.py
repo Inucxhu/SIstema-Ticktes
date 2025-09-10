@@ -479,10 +479,18 @@ async def obtener_ticket(ticket_id: str, current_user: User = Depends(get_curren
         raise HTTPException(status_code=404, detail="Ticket no encontrado")
     
     # Check permissions
-    if current_user.role == UserRole.END_USER and ticket["usuario_id"] != current_user.id:
-        raise HTTPException(status_code=403, detail="Not enough permissions")
+    if current_user.role == UserRole.END_USER:
+        # For end users, check both usuario_id and usuario_email (backward compatibility)
+        if (ticket.get("usuario_id") and ticket["usuario_id"] != current_user.id) and \
+           (ticket.get("usuario_email") and ticket["usuario_email"] != current_user.email):
+            raise HTTPException(status_code=403, detail="Not enough permissions")
     
-    return Ticket(**parse_from_mongo(ticket))
+    parsed_ticket = parse_from_mongo(ticket)
+    # Add usuario_id if missing (backward compatibility)
+    if 'usuario_id' not in parsed_ticket or not parsed_ticket['usuario_id']:
+        parsed_ticket['usuario_id'] = None
+    
+    return Ticket(**parsed_ticket)
 
 @api_router.put("/tickets/{ticket_id}", response_model=Ticket)
 async def actualizar_ticket(
