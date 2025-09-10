@@ -24,11 +24,11 @@ const NotificationProvider = ({ children }) => {
     setNotifications(prev => [newNotification, ...prev.slice(0, 49)]); // Keep last 50
     setUnreadCount(prev => prev + 1);
 
-    // Auto-remove toast after delay
-    if (notification.type !== 'persistent') {
+    // Auto-remove toast after delay (solo si no es persistente)
+    if (notification.type !== 'persistent' && notification.duration) {
       setTimeout(() => {
-        removeNotification(newNotification.id);
-      }, notification.duration || 5000);
+        setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+      }, notification.duration);
     }
   };
 
