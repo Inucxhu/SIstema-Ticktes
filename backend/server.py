@@ -96,6 +96,9 @@ class UserLogin(BaseModel):
 class UserUpdate(BaseModel):
     email: Optional[str] = None
     password: Optional[str] = None
+    role: Optional[UserRole] = None
+    campana: Optional[CampanasEnum] = None
+    grupo_soporte: Optional[GrupoSoporte] = None
 
 class User(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
