@@ -254,11 +254,26 @@ const CrearTicket = ({ onTicketCreado }) => {
 
   const manejarSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validación básica
+    if (!formulario.titulo.trim() || !formulario.descripcion.trim() || !formulario.usuario_email.trim()) {
+      addNotification({
+        type: 'error',
+        title: '❌ Campos Requeridos',
+        message: 'Por favor completa todos los campos antes de enviar.',
+        duration: 5000
+      });
+      return;
+    }
+
     setCargando(true);
 
     try {
+      console.log('Enviando ticket:', formulario);
       const response = await axios.post(`${API}/tickets`, formulario);
       const nuevoTicket = response.data;
+      
+      console.log('Ticket creado exitosamente:', nuevoTicket);
       
       // Notificación de éxito
       addNotification({
@@ -282,17 +297,22 @@ const CrearTicket = ({ onTicketCreado }) => {
         }, 1000);
       }
 
+      // Limpiar formulario
       setFormulario({ titulo: '', descripcion: '', usuario_email: '' });
-      onTicketCreado(nuevoTicket);
+      
+      // Callback para actualizar la lista
+      if (onTicketCreado) {
+        onTicketCreado(nuevoTicket);
+      }
       
     } catch (error) {
+      console.error('Error al crear ticket:', error);
       addNotification({
         type: 'error',
         title: '❌ Error al Crear Ticket',
-        message: 'No se pudo crear el ticket. Intenta nuevamente.',
+        message: error.response?.data?.detail || 'No se pudo crear el ticket. Intenta nuevamente.',
         duration: 5000
       });
-      console.error('Error:', error);
     } finally {
       setCargando(false);
     }
