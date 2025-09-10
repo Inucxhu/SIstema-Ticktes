@@ -510,18 +510,23 @@ async def actualizar_ticket(
     
     # Obtener ticket actualizado
     updated_ticket = await db.tickets.find_one({"id": ticket_id})
-    return Ticket(**parse_from_mongo(updated_ticket))
+    parsed_ticket = parse_from_mongo(updated_ticket)
+    # Add usuario_id if missing (backward compatibility)
+    if 'usuario_id' not in parsed_ticket or not parsed_ticket['usuario_id']:
+        parsed_ticket['usuario_id'] = None
+    
+    return Ticket(**parsed_ticket)
 
 @api_router.post("/tickets/{ticket_id}/assign")
 async def asignar_ticket(
     ticket_id: str,
-    current_user: User = Depends(require_role([UserRole.SUPPORT]))
+    current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.SUPPORT]))
 ):
     ticket = await db.tickets.find_one({"id": ticket_id})
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket no encontrado")
     
-    # Assign ticket to current support user
+    # Assign ticket to current user (Master Admin or Support)
     update_data = {
         "asignado_a": current_user.id,
         "estado": EstadoTicket.ASIGNADO,
@@ -531,7 +536,12 @@ async def asignar_ticket(
     await db.tickets.update_one({"id": ticket_id}, {"$set": update_data})
     
     updated_ticket = await db.tickets.find_one({"id": ticket_id})
-    return Ticket(**parse_from_mongo(updated_ticket))
+    parsed_ticket = parse_from_mongo(updated_ticket)
+    # Add usuario_id if missing (backward compatibility)
+    if 'usuario_id' not in parsed_ticket or not parsed_ticket['usuario_id']:
+        parsed_ticket['usuario_id'] = None
+    
+    return Ticket(**parsed_ticket)
 
 @api_router.get("/metricas", response_model=MetricasTickets)
 async def obtener_metricas(current_user: User = Depends(require_role([UserRole.MASTER_ADMIN, UserRole.ADMIN, UserRole.SUPPORT]))):
