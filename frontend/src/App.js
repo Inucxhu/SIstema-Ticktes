@@ -754,7 +754,7 @@ function App() {
               <p>🔔 Notificaciones en tiempo real • 🤖 Potenciado por IA • 📊 Métricas inteligentes</p>
             </div>
           </div>
-        </div>
+        </footer>
       </div>
     </NotificationProvider>
   );
