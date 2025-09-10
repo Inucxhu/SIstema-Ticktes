@@ -1053,7 +1053,51 @@ const TicketCard = ({ ticket, currentUser, onTicketUpdated }) => {
   const [resolveNotes, setResolveNotes] = useState('');
   const [resolving, setResolving] = useState(false);
   
-  const getPrioridadColor = (prioridad) => {
+  const abrirModalResolver = () => {
+    setResolveNotes('');
+    setShowResolveModal(true);
+  };
+
+  const resolverTicket = async (e) => {
+    e.preventDefault();
+    if (!resolveNotes.trim()) {
+      addNotification({
+        type: 'error',
+        title: '⚠️ Notas Requeridas',
+        message: 'Debes agregar notas de resolución para resolver el ticket.',
+        duration: 5000
+      });
+      return;
+    }
+
+    setResolving(true);
+
+    try {
+      const response = await axios.post(`${API}/tickets/${ticket.id}/resolve`, {
+        notas_resolucion: resolveNotes
+      });
+
+      addNotification({
+        type: 'success',
+        title: '🎉 Ticket Resuelto',
+        message: `Ticket "${ticket.titulo}" resuelto exitosamente con notas.`,
+        duration: 8000
+      });
+
+      setShowResolveModal(false);
+      setResolveNotes('');
+      onTicketUpdated(response.data);
+    } catch (error) {
+      addNotification({
+        type: 'error',
+        title: '❌ Error al Resolver',
+        message: error.response?.data?.detail || 'No se pudo resolver el ticket.',
+        duration: 5000
+      });
+    } finally {
+      setResolving(false);
+    }
+  };
     switch(prioridad) {
       case 'Alta': return 'bg-red-100 text-red-800 border-red-200';
       case 'Media': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
